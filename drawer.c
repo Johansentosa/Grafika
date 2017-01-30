@@ -4,6 +4,8 @@
 #include <fcntl.h>
 #include <linux/fb.h>
 #include <sys/mman.h>
+#include <pthread.h>
+
 
 typedef struct {
     int x; //absis
@@ -31,11 +33,12 @@ void plotPixelRGBA(int _x, int _y, int r, int g, int b, int a) {
 		*(fbp + location + 3) = a;      //
 }
 
-void drawLineNegative(Point p1, Point p2, int clear){
+void drawLineNegative(Point p1, Point p2, int clear, int dot){
 	int dx = p2.x - p1.x;
 	int dy = p2.y - p1.y;
 	int p = 2*dy - dx;
 	int x = p1.x; int y = p1.y;
+    int print = 1;
 	
 	while (x != p2.x) {
         if (p < 0) {
@@ -48,6 +51,9 @@ void drawLineNegative(Point p1, Point p2, int clear){
             y++;
         }
         
+        if (dot!=0 && x%dot == 0) print = !print;
+        if (!print) continue;
+
         if (clear == 1) {
           plotPixelRGBA(x,y,255,255,255,0);
         }
@@ -61,11 +67,12 @@ void drawLineNegative(Point p1, Point p2, int clear){
 
 }
 
-void drawLinePositive(Point p1, Point p2, int clear){
+void drawLinePositive(Point p1, Point p2, int clear, int dot){
 	int dx = p2.x - p1.x;
 	int dy = p1.y - p2.y;
 	int p = 2*dy - dx;
 	int x = p1.x; int y = p1.y;
+    int print = 1;
 	
 	while (x != p2.x) {
         if (p < 0) {
@@ -78,6 +85,9 @@ void drawLinePositive(Point p1, Point p2, int clear){
             y--;
         }
         
+        if (dot!=0 && x%dot == 0) print = !print;
+        if (!print) continue;
+
         if (clear == 1) {
           plotPixelRGBA(x,y,255,255,255,0);
         }
@@ -91,10 +101,12 @@ void drawLinePositive(Point p1, Point p2, int clear){
 
 }
 
-void drawHorizontalLine(Point p1, Point p2, int clear){
+void drawHorizontalLine(Point p1, Point p2, int clear, int dot){
     //plotPixelRGBA(x1,y1,0,0,0,0);
-    
+    int print = 1;
     for(int i = p1.x ; i <= p2.x; i++){
+        if (dot!=0 && i%dot == 0) print = !print;
+        if (!print) continue;
         if (clear == 1) {
           plotPixelRGBA(i,p1.y,255,255,255,0);
         }
@@ -107,8 +119,11 @@ void drawHorizontalLine(Point p1, Point p2, int clear){
     }
 }
 
-void drawVerticalLine(Point p1, Point p2, int clear){
+void drawVerticalLine(Point p1, Point p2, int clear, int dot){
+    int print = 1;
 	for (int i=p1.y; i<=p2.y; i++){
+        if (dot!=0 && i%dot == 0) print = !print;
+        if (!print) continue;
 		if (clear ==1){
 			plotPixelRGBA(p1.x,i,255,255,255,0);
         }
@@ -126,16 +141,34 @@ void drawLine(Point p1, Point p2, int clear){
         drawLine(p2, p1, clear);
     }
     else if (p1.x == p2.x) {
-        drawVerticalLine(p1, p2, clear);
+        drawVerticalLine(p1, p2, clear,0);
     }
     else if (p1.y == p2.y){
-        drawHorizontalLine(p1, p2, clear);
+        drawHorizontalLine(p1, p2, clear,0);
     }
     else if ((p2.x > p1.x) && (p2.y > p1.y)) {
-        drawLineNegative(p1, p2, clear);
+        drawLineNegative(p1, p2, clear, 0);
     }
     else if ((p2.x > p1.x) && (p2.y < p1.y)) {
-        drawLinePositive(p1, p2, clear);
+        drawLinePositive(p1, p2, clear,0);
+    }
+}
+
+void drawDottedLine(Point p1, Point p2, int clear, int dot){
+    if (p1.x > p2.x) {
+        drawDottedLine(p2, p1, clear, dot);
+    }
+    else if (p1.x == p2.x) {
+        drawVerticalLine(p1, p2, clear, dot);
+    }
+    else if (p1.y == p2.y){
+        drawHorizontalLine(p1, p2, clear, dot);
+    }
+    else if ((p2.x > p1.x) && (p2.y > p1.y)) {
+        drawLineNegative(p1, p2, clear, dot);
+    }
+    else if ((p2.x > p1.x) && (p2.y < p1.y)) {
+        drawLinePositive(p1, p2, clear, dot);
     }
 }
 
@@ -186,59 +219,4 @@ void plot8points(Point center, int x, int y, int clear) {
         plot4points(center, y, x, clear);
 }
 
-int main(){
-	fbfd = open("/dev/fb0", O_RDWR);
-     if (fbfd == -1) {
-         perror("Error: cannot open framebuffer device");
-         exit(1);
-     }
-     printf("The framebuffer device was opened successfully.\n");
 
-     // Ambil data informasi screen
-     if (ioctl(fbfd, FBIOGET_FSCREENINFO, &finfo) == -1) {
-         perror("Error reading fixed information");
-         exit(2);
-     }
-     if (ioctl(fbfd, FBIOGET_VSCREENINFO, &vinfo) == -1) {
-         perror("Error reading variable information");
-         exit(3);
-     }
-
-     // Informasi resolusi, dan bit per pixel
-     printf("%dx%d, %dbpp\n", vinfo.xres, vinfo.yres, vinfo.bits_per_pixel);
-
-     // Hitung ukuran memori untuk menyimpan framebuffer
-     screensize = vinfo.xres * vinfo.yres * vinfo.bits_per_pixel / 8;
-
-     // Masukkan framebuffer ke memory, untuk kita ubah-ubah
-     fbp = (char *)mmap(0, screensize, PROT_READ | PROT_WRITE, MAP_SHARED,
-                        fbfd, 0);
-     if ((int)fbp == -1) {
-         perror("Error: failed to map framebuffer device to memory");
-         exit(4);
-     }
-     printf("The framebuffer device was mapped to memory successfully.\n");
-     
-     int x;
-    int y;
-    for (y = 0; y < vinfo.yres - 15 ;y++){
-         for (x = 0; x < vinfo.xres  ; x++) {
-             if (vinfo.bits_per_pixel == 32) {
-                 plotPixelRGBA(x,y,255,255,255,0);
-             } else  { 
-                 plotPixelRGBA(x,y,255,255,255,0);
-             }
-
-         }
-	 }
-     
-	Point P1, P2;
-	P1.x = 0; P1.y= 0; P2.x = 50; P2.y = 400;
-	drawLine(P1,P2,0);
-
-    Point P3;
-    P3.x = 500; P3.y = 500; 
-    int radius = 35;
-    drawCircle(P3, radius, 0);
-	
-}
