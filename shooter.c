@@ -36,9 +36,11 @@ void *commandcall() {
         	getch();
         	X = getch();
         	if (X == 'C') {
-        		p.x += 100;
+        		if (p.x < vinfo.xres - 100)
+        			p.x += 100;
         	} else if (X == 'D') {
-        		p.x -= 100;
+        		if (p.x > 100)
+        			p.x -= 100;
         	}
             
         } else if (X == ' ') {
