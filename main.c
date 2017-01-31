@@ -56,7 +56,7 @@ int main(){
     int radius = 35;
     drawCircle(P3, radius, 1);
     drawCircle(P3, radius+15, 1);
-    p.x = vinfo.xres/2; p.y = 0;
+    point.x = vinfo.xres/2; point.y = 0;
     drawShooter();
 
 	pthread_t p;

@@ -40,28 +40,56 @@ void drawLineNegative(Point p1, Point p2, int clear, int dot){
 	int x = p1.x; int y = p1.y;
     int print = 1;
 	
-	while (x != p2.x) {
-        if (p < 0) {
-            p = p + dy + dy;
-            x++;
-        }
-        else {
-            p = p + dy + dy - dx - dx;
-            x++;
-            y++;
-        }
-        
-        if (dot!=0 && x%dot == 0) print = !print;
-        if (!print) continue;
+    if (abs(dx) > abs(dy)) {
+    	while (x != p2.x) {
+            if (p < 0) {
+                p = p + dy + dy;
+                x++;
+            }
+            else {
+                p = p + dy + dy - dx - dx;
+                x++;
+                y++;
+            }
+            
+            if (dot!=0 && x%dot == 0) print = !print;
+            if (!print) continue;
 
-        if (clear == 1) {
-          plotPixelRGBA(x,y,255,255,255,0);
+            if (clear == 1) {
+              plotPixelRGBA(x,y,255,255,255,0);
+            }
+            else if (clear == 2) {
+              plotPixelRGBA(x,y,255,0,0,0);
+            }
+            else {
+              plotPixelRGBA(x,y,0,0,0,0);
+            }
         }
-        else if (clear == 2) {
-          plotPixelRGBA(x,y,255,0,0,0);
-        }
-        else {
-          plotPixelRGBA(x,y,0,0,0,0);
+    } else {
+        p = 2*dx -dy;
+        while (y != p2.y) {
+            if (p < 0) {
+                p = p + dx + dx;
+                y++;
+            }
+            else {
+                p = p + dx + dx - dy - dy;
+                y++;
+                x++;
+            }
+            
+            if (dot!=0 && y%dot == 0) print = !print;
+            if (!print) continue;
+
+            if (clear == 1) {
+              plotPixelRGBA(x,y,255,255,255,0);
+            }
+            else if (clear == 2) {
+              plotPixelRGBA(x,y,255,0,0,0);
+            }
+            else {
+              plotPixelRGBA(x,y,0,0,0,0);
+            }
         }
     }
 
@@ -74,28 +102,57 @@ void drawLinePositive(Point p1, Point p2, int clear, int dot){
 	int x = p1.x; int y = p1.y;
     int print = 1;
 	
-	while (x != p2.x) {
-        if (p < 0) {
-            p = p + dy + dy;
-            x++;
-        }
-        else {
-            p = p + dy + dy - dx - dx;
-            x++;
-            y--;
-        }
-        
-        if (dot!=0 && x%dot == 0) print = !print;
-        if (!print) continue;
+    if (abs(dx) > abs(dy)) {
+    	while (x != p2.x) {
+            if (p < 0) {
+                p = p + dy + dy;
+                x++;
+            }
+            else {
+                p = p + dy + dy - dx - dx;
+                x++;
+                y--;
+            }
+            
+            if (dot!=0 && x%dot == 0) print = !print;
+            if (!print) continue;
 
-        if (clear == 1) {
-          plotPixelRGBA(x,y,255,255,255,0);
+            if (clear == 1) {
+              plotPixelRGBA(x,y,255,255,255,0);
+            }
+            else if (clear == 2) {
+              plotPixelRGBA(x,y,255,0,0,0);
+            }
+            else {
+              plotPixelRGBA(x,y,0,0,0,0);
+            }
         }
-        else if (clear == 2) {
-          plotPixelRGBA(x,y,255,0,0,0);
-        }
-        else {
-          plotPixelRGBA(x,y,0,0,0,0);
+    } else {
+        p = 2*dx - dy;
+        y = p1.y;
+        while (y != p2.y) {
+            if (p < 0) {
+                p = p + dx + dx;
+                y--;
+            }
+            else {
+                p = p + dx + dx - dy - dy;
+                y--;
+                x++;
+            }
+            
+            if (dot!=0 && y%dot == 0) print = !print;
+            if (!print) continue;
+
+            if (clear == 1) {
+              plotPixelRGBA(x,y,255,255,255,0);
+            }
+            else if (clear == 2) {
+              plotPixelRGBA(x,y,255,0,0,0);
+            }
+            else {
+              plotPixelRGBA(x,y,0,0,0,0);
+            }
         }
     }
 
@@ -218,5 +275,6 @@ void plot8points(Point center, int x, int y, int clear) {
         plot4points(center, x, y, clear);
         plot4points(center, y, x, clear);
 }
+
 
 
