@@ -46,7 +46,7 @@ int main(){
          }
 	 }
      
-	Point P1, P2;
+	/*Point P1, P2;
 	P1.x = 0; P1.y= 0; P2.x = 50; P2.y = 400;
 	drawLine(P1,P2,1);
 
@@ -57,8 +57,11 @@ int main(){
     drawCircle(P3, radius, 1);
     drawCircle(P3, radius+15, 1);
     point.x = vinfo.xres/2; point.y = 0;
-    drawShooter();
-
+    drawShooter();*/
+    
+    Point start = {10,10};
+    drawPlane(start);
+    
 	pthread_t p;
     pthread_create(&p, NULL, &commandcall, NULL);
     pthread_join(p, NULL);

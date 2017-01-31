@@ -276,5 +276,76 @@ void plot8points(Point center, int x, int y, int clear) {
         plot4points(center, y, x, clear);
 }
 
-
-
+void drawPlane (Point start){
+	int posx = start.x;
+    int posy = start.y;
+    
+    int nPoint = 58;
+    Point arrPoint[58] = {
+		//tail 10
+		{0,2}, {2,2},
+		{2,2}, {5,6},
+		{5,6}, {9,8},
+		{9,8}, {1,8},
+		{1,8}, {0,2},
+		
+		//body 28
+		{0,7},{1,7},
+		{7,7},{19,7},
+		{23,7},{25,7},
+		{25,7},{30,9},
+		{30,9},{25,11},
+		{25,11},{18,11},
+		{18,11},{17,12},
+		{17,12},{15,12},
+		{15,12},{9,21},
+		{9,21},{5,21},
+		{5,21},{8,12},
+		{8,12},{9,11},
+		{9,11},{0,11},
+		{0,7},{0,11},
+		
+		//kaca 12
+		{19,7},{20,6},
+		{19,7},{20,8},
+		{22,6},{23,7},
+		{22,8},{23,7},
+		{20,6},{22,6},
+		{20,8},{22,8},
+		
+		//sayap 6
+		{10,7},{17,0},
+		{17,0},{19.5,0},
+		{19.5,0},{18,7},
+		
+		//roda 2
+		{19,11},{19,12}
+	};
+	
+	Point pCircle = {19,13};
+	
+	//scale
+    int scaleFactor = 10;
+    for(int i = 0; i<nPoint; i++){
+		arrPoint[i].x *= scaleFactor;
+		arrPoint[i].y *= scaleFactor;
+	}
+	pCircle.x *= scaleFactor;
+	pCircle.y *= scaleFactor;
+	
+	//position
+	for (int i = 0; i<nPoint; i++){
+		arrPoint[i].x += posx;
+		arrPoint[i].y += posy;
+	}
+	pCircle.x += posx;
+	pCircle.y += posy;
+	
+    //draw
+    for (int i = 0; i<nPoint; i = i+2){
+		drawLine(arrPoint[i],arrPoint[i+1],1);
+	}
+	
+	drawCircle(pCircle,8,1);
+	drawCircle(pCircle,4,1);
+}
