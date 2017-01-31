@@ -58,14 +58,66 @@ int main(){
     drawCircle(P3, radius+15, 1);
     point.x = vinfo.xres/2; point.y = 0;
     drawShooter();*/
+
+    int posx = 10;
+    int posy = 10;
+    Point arrPoint[38] = {
+        //tail 10
+        {0,2}, {2,2},
+        {2,2}, {5,6},
+        {5,6}, {9,8},
+        {9,8}, {1,8},
+        {1,8}, {0,2},
+        
+        //body 28
+        {0,7},{1,7},
+        {7,7},{19,7},
+        {23,7},{25,7},
+        {25,7},{30,9},
+        {30,9},{25,11},
+        {25,11},{18,11},
+        {18,11},{17,12},
+        {17,12},{15,12},
+        
+        {15,12},{9,23},
+        {9,23},{5,23},
+        {5,23},{8,12},
+        {8,12},{9,11},
+        {9,11},{0,11},
+        {0,7},{0,11}
+    };
     
-    Point start = {10,10};
-    drawPlane(start);
-    Point center;
-    center.x = 400; center.y = 400;
+    //scale
+    int scaleFactor = 10;
+    for(int i = 0; i<38; i++){
+        arrPoint[i].x *= scaleFactor;
+        arrPoint[i].y *= scaleFactor;
+    }
+    
+    //position
+    for (int i = 0; i<38; i++){
+        arrPoint[i].x += posx;
+        arrPoint[i].y += posy;
+    }
+    
+    Point p1, p2;
+    
+    p1.x = 10; p1.y = 10;
+    
+    point.x = vinfo.xres/2;
+    
+    pthread_t p;
+    pthread_create(&p, NULL, &commandcall, NULL);
+    pthread_create(&p, NULL, &draw, NULL);
+    while(1) {
+        drawPlane(p1,0);
+        p1.x += 1;
+        drawPlane(p1,1);
+        usleep(10000);
+    }
+    pthread_join(p, NULL);
+    
+    Point center = {400, 400};
     drawExplosion(center, 100);
     
-	pthread_t p;
-    pthread_create(&p, NULL, &commandcall, NULL);
-    pthread_join(p, NULL);
 }

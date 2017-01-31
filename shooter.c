@@ -2,6 +2,7 @@
 #include <termios.h>
 
 Point point;
+int test = 0;
 
 char getch() {
     char buf = 0;
@@ -11,6 +12,7 @@ char getch() {
             perror("tcsetattr()");
     new = old;
     new.c_lflag &= ~ICANON;
+    new.c_lflag &= ~ECHO;
     new.c_cc[VMIN] = 1;
     new.c_cc[VTIME] = 0;
     if (tcsetattr(0, TCSANOW, &new) < 0)
@@ -22,17 +24,19 @@ char getch() {
     return (buf);
 }
 
-void drawShooter() {
+void drawShooter(int type) {
 	Point p1, p2;
+	p2.x = (vinfo.xres/2-point.x)/10;
+	p2.y = (vinfo.yres * 0.95 - point.y)/10;
 	
 	p1.x = vinfo.xres/2; p1.y = vinfo.yres * 0.95;
-	drawDottedLine(point, p1, 1, 10);
+	drawDottedLine(point, p1, type, 10);
 }
 
 void shoot() {
-	int radius = 10;
 	Point p1;
 	p1.x = vinfo.xres/2; p1.y = vinfo.yres * 0.95;
+	/*int radius = 10;
 	drawCircle(p1, radius, 1);
 
 	if (point.x == vinfo.xres/2) {
@@ -45,7 +49,9 @@ void shoot() {
 		drawCircle(p1, radius, 0);
 	} else if (point.x < vinfo.xres/2) {
 		
-	}
+	}*/
+	int tiga = 3;
+	drawLine(point, p1, tiga);
 }
 
 void *commandcall() {
@@ -55,20 +61,37 @@ void *commandcall() {
         	getch();
         	X = getch();
         	if (X == 'C') {
-        		if (point.x < vinfo.xres - 100)
-        			point.x += 100;
+        		if (point.x < vinfo.xres - 50) {
+					test = 1;
+					drawShooter(0);
+        			point.x += 50;
+        			test = 0;
+        		}
         	} else if (X == 'D') {
-        		if (point.x > 100)
-        			point.x -= 100;
+        		if (point.x > 50) {
+					test = 1;
+					drawShooter(0);
+        			point.x -= 50;
+        			test = 0;
+        		}
         	}
             
         } else if (X == ' ') {
         	Point p1;
         	p1.x = vinfo.xres/2; p1.y = vinfo.yres * 0.95;
+        	printf("HEHE\n\n");
         	shoot();
         }
-        
+        drawShooter(1);
+    }
+}
 
-        drawShooter();
+void *draw() {
+    while (1) {
+		if (test == 0) {
+			drawShooter(1);
+			usleep(200);
+			drawShooter(0);
+		}
     }
 }
