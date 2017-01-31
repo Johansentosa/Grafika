@@ -429,3 +429,40 @@ void drawPlaneRight (Point start){
 	drawCircle(pCircle,8,1);
 	drawCircle(pCircle,4,1);
 }
+
+void drawExplosion(Point center, int scale) {
+	Point p1, p2, p3, p4, p5, p6, p7, p8, p9, p10, p11, p12, p13, p14, p15, p16;
+	p1.x = center.x - (1*scale);		p1.y = center.y + (2*scale);
+	p2.x = center.x;					p2.y = center.y + (3*scale);
+	p3.x = center.x + (1*scale);		p3.y = center.y + (2*scale);
+	p4.x = center.x + (3*scale);		p4.y = center.y + (3*scale);
+	p5.x = center.x + (2*scale);		p5.y = center.y + (1*scale);
+	p6.x = center.x + (3*scale);		p6.y = center.y;
+	p7.x = center.x + (2*scale);		p7.y = center.y - (1*scale);
+	p8.x = center.x + (3*scale);		p8.y = center.y - (3*scale);
+	p9.x = center.x + (1*scale);		p9.y = center.y - (2*scale);
+	p10.x = center.x;					p10.y = center.y - (3*scale);
+	p11.x = center.x - (1*scale);		p11.y = center.y - (2*scale);
+	p12.x = center.x - (3*scale);		p12.y = center.y - (3*scale);
+	p13.x = center.x - (2*scale);		p13.y = center.y - (1*scale);
+	p14.x = center.x - (3*scale);		p14.y = center.y;
+	p15.x = center.x - (2*scale);		p15.y = center.y + (1*scale);
+	p16.x = center.x - (3*scale);		p16.y = center.y + (3*scale);
+	
+	drawLine(p1,p2,0);
+	drawLine(p2,p3,0);
+	drawLine(p3,p4,0);
+	drawLine(p4,p5,0);
+	drawLine(p5,p6,0);
+	drawLine(p6,p7,0);
+	drawLine(p7,p8,0);
+	drawLine(p8,p9,0);
+	drawLine(p9,p10,0);
+	drawLine(p10,p11,0);
+	drawLine(p11,p12,0);
+	drawLine(p12,p13,0);
+	drawLine(p13,p14,0);
+	drawLine(p14,p15,0);
+	drawLine(p15,p16,0);
+	drawLine(p16,p1,0);
+}

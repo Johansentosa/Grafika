@@ -61,6 +61,9 @@ int main(){
     
     Point start = {10,10};
     drawPlane(start);
+    Point center;
+    center.x = 400; center.y = 400;
+    drawExplosion(center, 100);
     
 	pthread_t p;
     pthread_create(&p, NULL, &commandcall, NULL);
