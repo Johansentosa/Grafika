@@ -33,7 +33,7 @@ void drawShooter(int type) {
 	drawDottedLine(point, p1, type, 10);
 }
 
-void shoot() {
+void *shoot() {
 	Point p1;
 	p1.x = vinfo.xres/2; p1.y = vinfo.yres * 0.95;
 	/*int radius = 10;
@@ -52,46 +52,44 @@ void shoot() {
 	}*/
 	int tiga = 3;
 	drawLine(point, p1, tiga);
+	return;
 }
 
 void *commandcall() {
     while (1) {
         char X = getch();
+        if (life <= 0) {
+			break;
+		}
         if (X == '\033') {
         	getch();
         	X = getch();
         	if (X == 'C') {
-        		if (point.x < vinfo.xres - 50) {
+        		if (point.x < vinfo.xres - 25) {
 					test = 1;
 					drawShooter(0);
-        			point.x += 50;
+        			point.x += 25;
         			test = 0;
         		}
         	} else if (X == 'D') {
-        		if (point.x > 50) {
+        		if (point.x > 25) {
 					test = 1;
 					drawShooter(0);
-        			point.x -= 50;
+        			point.x -= 25;
         			test = 0;
         		}
         	}
             
         } else if (X == ' ') {
         	Point p1;
-        	p1.x = vinfo.xres/2; p1.y = vinfo.yres * 0.95;
-        	printf("HEHE\n\n");
-        	shoot();
+        	p1.x = vinfo.xres/2; p1.y = vinfo.yres;
+        	
+			pthread_t p;
+			pthread_create(&p, NULL, &shoot, NULL);
         }
         drawShooter(1);
     }
 }
 
 void *draw() {
-    while (1) {
-		if (test == 0) {
-			drawShooter(1);
-			usleep(200);
-			drawShooter(0);
-		}
-    }
 }

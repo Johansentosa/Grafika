@@ -12,6 +12,7 @@ typedef struct {
     int y; //ordinate
 }Point;
 
+int life = 30;
 int fbfd = 0;                       //Filebuffer Filedescriptor
 struct fb_var_screeninfo vinfo;     //Struct Variable Screeninfo
 struct fb_fix_screeninfo finfo;     //Struct Fixed Screeninfo
@@ -31,6 +32,52 @@ void plotPixelRGBA(int _x, int _y, int r, int g, int b, int a) {
         *(fbp + location + 1) = g;    //green
         *(fbp + location + 2) = r;    //red
         *(fbp + location + 3) = a;      //
+}
+
+int checkColorB(int _x, int _y, unsigned char nb) {
+        long int location = (_x+vinfo.xoffset) * (vinfo.bits_per_pixel/8) + (_y+vinfo.yoffset) * finfo.line_length;
+		unsigned char b = *((unsigned char *) (fbp + location));        //blue
+		if (nb == b) {
+			return 1;
+		}
+		return 0;
+}
+
+int check4points(Point center, int x, int y, unsigned char nb) {
+	int b = 0;
+	b |= checkColorB(center.x + x, center.y + y, nb);
+	b |= checkColorB(center.x - x, center.y + y, nb);
+	b |= checkColorB(center.x + x, center.y - y, nb);
+	b |= checkColorB(center.x - x, center.y - y, nb);
+	return b;
+}
+
+int check8points(Point center, int x, int y, unsigned char nb) {
+	return (check4points(center, x, y, nb) || check4points(center, y, x, nb));
+}
+
+int checkCircleCollision(Point center, int radius, unsigned char nb) {
+    int x = 0;
+    int y = radius;
+    int p = 1 - radius;
+    /* plot first set of point */
+    if (check8points(center, x, y, nb)) {
+		return 1;
+	}
+
+    while (x < y) {
+        x++;
+        if (p < 0) {
+            p += 2 * x + 1;
+        } else {
+            y--;
+            p += 2 * (x - y) + 1;
+        }
+        if (check8points(center, x, y, nb)) {
+			return 1;
+		}
+    }
+    return 0;
 }
 
 void drawLineNegative(Point p1, Point p2, int clear, int dot){
@@ -54,6 +101,19 @@ void drawLineNegative(Point p1, Point p2, int clear, int dot){
                 y--;
             }
             
+			if (dot!=0 && clear==1) {
+				long int location = (x+vinfo.xoffset) * (vinfo.bits_per_pixel/8) + (y+vinfo.yoffset) * finfo.line_length;
+				unsigned char b1 = *((unsigned char *) (fbp + location));        //blue
+				long int location2 = (x+1+vinfo.xoffset) * (vinfo.bits_per_pixel/8) + (y+vinfo.yoffset) * finfo.line_length;
+				unsigned char b2 = *((unsigned char *) (fbp + location2));        //blue
+				long int location3 = (x-1+vinfo.xoffset) * (vinfo.bits_per_pixel/8) + (y+vinfo.yoffset) * finfo.line_length;
+				unsigned char b3 = *((unsigned char *) (fbp + location3));        //blue
+				if (b1 != 0 || b2 != 0 || b3 != 0) {
+					break;
+				}
+			}
+            if (dot!=0 && ((x-vinfo.xres/2)*(x-vinfo.xres/2)+(vinfo.yres-y)*(vinfo.yres-y) <= 2025)) continue;
+            if ((clear == 3) && (x-vinfo.xres/2)*(x-vinfo.xres/2)+(vinfo.yres-y)*(vinfo.yres-y) <= 3025) continue;
             if (dot!=0 && x%dot == 0) print = !print;
             if (!print) continue;
 
@@ -67,15 +127,26 @@ void drawLineNegative(Point p1, Point p2, int clear, int dot){
               Point few = {xold, yold};
               Point pew = {x,y};
               drawCircle(few, 10, 0);
-              drawCircle(pew, 10, 1);
-              usleep(400);
+              drawCircle(pew, 10, 2);
+			  usleep(1000);
+			  if (checkCircleCollision(pew, 10, 200)) {
+				  drawCircle(pew, 10, 0);
+				  drawExplosion(pew, 15, 2);
+				  usleep(50000);
+				  drawExplosion(pew, 15, 0);
+				  life--;
+				  break;
+			  }
               xold = x;
               yold = y;
-              if (y < 30) {
+              if (y < 15) {
                 drawCircle(pew, 10, 0);
                 break;
               }
             }
+			else if (clear == 4) {
+			  plotPixelRGBA(x,y,200,200,200,0);
+			}
             else {
               plotPixelRGBA(x,y,0,0,0,0);
             }
@@ -93,6 +164,19 @@ void drawLineNegative(Point p1, Point p2, int clear, int dot){
                 x--;
             }
             
+			if (dot!=0 && clear==1) {
+				long int location = (x+vinfo.xoffset) * (vinfo.bits_per_pixel/8) + (y+vinfo.yoffset) * finfo.line_length;
+				unsigned char b1 = *((unsigned char *) (fbp + location));        //blue
+				long int location2 = (x+1+vinfo.xoffset) * (vinfo.bits_per_pixel/8) + (y+vinfo.yoffset) * finfo.line_length;
+				unsigned char b2 = *((unsigned char *) (fbp + location2));        //blue
+				long int location3 = (x-1+vinfo.xoffset) * (vinfo.bits_per_pixel/8) + (y+vinfo.yoffset) * finfo.line_length;
+				unsigned char b3 = *((unsigned char *) (fbp + location3));        //blue
+				if (b1 != 0 || b2 != 0 || b3 != 0) {
+					break;
+				}
+			}
+            if (dot!=0 && ((x-vinfo.xres/2)*(x-vinfo.xres/2)+(vinfo.yres-y)*(vinfo.yres-y) <= 2025)) continue;
+            if ((clear == 3) && (x-vinfo.xres/2)*(x-vinfo.xres/2)+(vinfo.yres-y)*(vinfo.yres-y) <= 3025) continue;
             if (dot!=0 && y%dot == 0) print = !print;
             if (!print) continue;
 
@@ -106,15 +190,26 @@ void drawLineNegative(Point p1, Point p2, int clear, int dot){
               Point few = {xold, yold};
               Point pew = {x,y};
               drawCircle(few, 10, 0);
-              drawCircle(pew, 10, 1);
-              usleep(400);
+              drawCircle(pew, 10, 2);
+			  usleep(1000);
+			  if (checkCircleCollision(pew, 10, 200)) {
+				  drawCircle(pew, 10, 0);
+				  drawExplosion(pew, 15, 2);
+				  usleep(50000);
+				  drawExplosion(pew, 15, 0);
+				  life--;
+				  break;
+			  }
               xold = x;
               yold = y;
-              if (y < 30) {
+              if (y < 15) {
                 drawCircle(pew, 10, 0);
                 break;
               }
             }
+			else if (clear == 4) {
+			  plotPixelRGBA(x,y,200,200,200,0);
+			}
             else {
               plotPixelRGBA(x,y,0,0,0,0);
             }
@@ -143,7 +238,19 @@ void drawLinePositive(Point p1, Point p2, int clear, int dot){
                 x++;
                 y--;
             }
-            
+			if (dot!=0 && clear==1) {
+				long int location = (x+vinfo.xoffset) * (vinfo.bits_per_pixel/8) + (y+vinfo.yoffset) * finfo.line_length;
+				unsigned char b1 = *((unsigned char *) (fbp + location));        //blue
+				long int location2 = (x+1+vinfo.xoffset) * (vinfo.bits_per_pixel/8) + (y+vinfo.yoffset) * finfo.line_length;
+				unsigned char b2 = *((unsigned char *) (fbp + location2));        //blue
+				long int location3 = (x-1+vinfo.xoffset) * (vinfo.bits_per_pixel/8) + (y+vinfo.yoffset) * finfo.line_length;
+				unsigned char b3 = *((unsigned char *) (fbp + location3));        //blue
+				if (b1 != 0 || b2 != 0 || b3 != 0) {
+					break;
+				}
+			}
+            if (dot!=0 && ((x-vinfo.xres/2)*(x-vinfo.xres/2)+(vinfo.yres-y)*(vinfo.yres-y) <= 2025)) continue;
+            if ((clear == 3) && (x-vinfo.xres/2)*(x-vinfo.xres/2)+(vinfo.yres-y)*(vinfo.yres-y) <= 3025) continue;
             if (dot!=0 && x%dot == 0) print = !print;
             if (!print) continue;
 
@@ -157,15 +264,26 @@ void drawLinePositive(Point p1, Point p2, int clear, int dot){
               Point few = {xold, yold};
               Point pew = {x,y};
               drawCircle(few, 10, 0);
-              drawCircle(pew, 10, 1);
-              usleep(400);
+              drawCircle(pew, 10, 2);
+			  usleep(1000);
+			  if (checkCircleCollision(pew, 10, 200)) {
+				  drawCircle(pew, 10, 0);
+				  drawExplosion(pew, 15, 2);
+				  usleep(50000);
+				  drawExplosion(pew, 15, 0);
+				  life--;
+				  break;
+			  }
               xold = x;
               yold = y;
-              if (y < 30) {
+              if (y < 15) {
                 drawCircle(pew, 10, 0);
                 break;
               }
             }
+			else if (clear == 4) {
+			  plotPixelRGBA(x,y,200,200,200,0);
+			}
             else {
               plotPixelRGBA(x,y,0,0,0,0);
             }
@@ -183,7 +301,19 @@ void drawLinePositive(Point p1, Point p2, int clear, int dot){
                 y--;
                 x++;
             }
-            
+			if (dot!=0 && clear==1) {
+				long int location = (x+vinfo.xoffset) * (vinfo.bits_per_pixel/8) + (y+vinfo.yoffset) * finfo.line_length;
+				unsigned char b1 = *((unsigned char *) (fbp + location));        //blue
+				long int location2 = (x+1+vinfo.xoffset) * (vinfo.bits_per_pixel/8) + (y+vinfo.yoffset) * finfo.line_length;
+				unsigned char b2 = *((unsigned char *) (fbp + location2));        //blue
+				long int location3 = (x-1+vinfo.xoffset) * (vinfo.bits_per_pixel/8) + (y+vinfo.yoffset) * finfo.line_length;
+				unsigned char b3 = *((unsigned char *) (fbp + location3));        //blue
+				if (b1 != 0 || b2 != 0 || b3 != 0) {
+					break;
+				}
+			}
+            if (dot!=0 && ((x-vinfo.xres/2)*(x-vinfo.xres/2)+(vinfo.yres-y)*(vinfo.yres-y) <= 2025)) continue;
+            if ((clear == 3) && (x-vinfo.xres/2)*(x-vinfo.xres/2)+(vinfo.yres-y)*(vinfo.yres-y) <= 3025) continue;
             if (dot!=0 && y%dot == 0) print = !print;
             if (!print) continue;
 
@@ -197,15 +327,26 @@ void drawLinePositive(Point p1, Point p2, int clear, int dot){
               Point few = {xold, yold};
               Point pew = {x,y};
               drawCircle(few, 10, 0);
-              drawCircle(pew, 10, 1);
-              usleep(400);
+              drawCircle(pew, 10, 2);
+			  usleep(1000);
+			  if (checkCircleCollision(pew, 10, 200)) {
+				  drawCircle(pew, 10, 0);
+				  drawExplosion(pew, 15, 2);
+				  usleep(50000);
+				  drawExplosion(pew, 15, 0);
+				  life--;
+				  break;
+			  }
               xold = x;
               yold = y;
-              if (y < 30) {
+              if (y < 15) {
                 drawCircle(pew, 10, 0);
                 break;
               }
             }
+			else if (clear == 4) {
+			  plotPixelRGBA(x,y,200,200,200,0);
+			}
             else {
               plotPixelRGBA(x,y,0,0,0,0);
             }
@@ -226,6 +367,9 @@ void drawHorizontalLine(Point p1, Point p2, int clear, int dot){
         else if (clear == 2) {
           plotPixelRGBA(i,p1.y,255,0,0,0);
         }
+        else if (clear == 4) {
+          plotPixelRGBA(i,p1.y,200,200,200,0);
+        }
         else {
           plotPixelRGBA(i,p1.y,0,0,0,0);
         }
@@ -236,14 +380,23 @@ void drawVerticalLine(Point p1, Point p2, int clear, int dot){
     int xold = 150;
     int yold = 150;
     int print = 1;
-    int tes = 0;
-    if (clear == 3) {
-        tes = 1;
-        printf("NOOOOO\n");
-    }
-    for (int i=p1.y; i<=p2.y; i++){
+    for (int i=p2.y; i>=p1.y; i--){
+		if (dot!=0 && clear==1) {
+			long int location = (p1.x+vinfo.xoffset) * (vinfo.bits_per_pixel/8) + (i+vinfo.yoffset) * finfo.line_length;
+			unsigned char b1 = *((unsigned char *) (fbp + location));        //blue
+			long int location2 = (p1.x+1+vinfo.xoffset) * (vinfo.bits_per_pixel/8) + (i+vinfo.yoffset) * finfo.line_length;
+			unsigned char b2 = *((unsigned char *) (fbp + location2));        //blue
+			long int location3 = (p1.x-1+vinfo.xoffset) * (vinfo.bits_per_pixel/8) + (i+vinfo.yoffset) * finfo.line_length;
+			unsigned char b3 = *((unsigned char *) (fbp + location3));        //blue
+			if (b1 != 0 || b2 != 0 || b3 != 0) {
+				break;
+			}
+		}
+        if (dot!=0 && ((p1.x-vinfo.xres/2)*(p1.x-vinfo.xres/2)+(vinfo.yres-i)*(vinfo.yres-i) <= 2025)) continue;
+        if ((clear == 3) && ((p1.x-vinfo.xres/2)*(p1.x-vinfo.xres/2)+(vinfo.yres-i)*(vinfo.yres-i) <= 3025)) continue;
         if (dot!=0 && i%dot == 0) print = !print;
         if (dot!=0 && !print) continue;
+        
         if (clear ==1){
             plotPixelRGBA(p1.x,i,255,255,255,0);
         }
@@ -251,14 +404,28 @@ void drawVerticalLine(Point p1, Point p2, int clear, int dot){
             plotPixelRGBA(p1.x,i,255,0,0,0);
         }
         else if (clear == 3) {
-            printf("HAHAHAHAHAHAHA\n");
           Point few = {xold, yold};
-          Point pew = {p1.x, vinfo.yres-i-150};
+          Point pew = {p1.x, i-10};
           drawCircle(few, 10, 0);
-          drawCircle(pew, 10, 1);
+          drawCircle(pew, 10, 2);
           usleep(1000);
+          if (checkCircleCollision(pew, 10, 200)) {
+			  drawCircle(pew, 10, 0);
+			  drawExplosion(pew, 15, 2);
+			  usleep(50000);
+			  drawExplosion(pew, 15, 0);
+			  life--;
+			  break;
+		  }
           xold = p1.x;
-          yold = vinfo.yres-i-150;
+          yold = i-10;
+		  if (i-10 < 15) {
+			drawCircle(pew, 10, 0);
+			break;
+		  }
+        }
+        else if (clear == 4) {
+          plotPixelRGBA(p1.x,i,200,200,200,0);
         }
         else {
             plotPixelRGBA(p1.x,i,0,0,0,0);
@@ -303,7 +470,6 @@ void drawDottedLine(Point p1, Point p2, int clear, int dot){
 }
 
 // draw circle section
-
 void drawCircle(Point center, int radius, int clear) {
     int x = 0;
     int y = radius;
@@ -331,11 +497,17 @@ void plot4points(Point center, int x, int y, int clear) {
         plotPixelRGBA(center.x - x, center.y - y, 255, 255, 255, 0);
     } else 
     if (clear == 2) {
-        plotPixelRGBA(center.x + x, center.y + y, 255, 0, 0, 0);
-        plotPixelRGBA(center.x - x, center.y + y, 255, 0, 0, 0);
-        plotPixelRGBA(center.x + x, center.y - y, 255, 0, 0, 0);
-        plotPixelRGBA(center.x - x, center.y - y, 255, 0, 0, 0);
-    } else {
+        plotPixelRGBA(center.x + x, center.y + y, 0, 255, 0, 0);
+        plotPixelRGBA(center.x - x, center.y + y, 0, 255, 0, 0);
+        plotPixelRGBA(center.x + x, center.y - y, 0, 255, 0, 0);
+        plotPixelRGBA(center.x - x, center.y - y, 0, 255, 0, 0);
+    } else 
+    if (clear == 4) {
+        plotPixelRGBA(center.x + x, center.y + y, 200, 200, 200, 0);
+        plotPixelRGBA(center.x - x, center.y + y, 200, 200, 200, 0);
+        plotPixelRGBA(center.x + x, center.y - y, 200, 200, 200, 0);
+        plotPixelRGBA(center.x - x, center.y - y, 200, 200, 200, 0);
+	} else {
         plotPixelRGBA(center.x + x, center.y + y, 0, 0, 0, 0);
         plotPixelRGBA(center.x - x, center.y + y, 0, 0, 0, 0);
         plotPixelRGBA(center.x + x, center.y - y, 0, 0, 0, 0);
@@ -347,6 +519,42 @@ void plot4points(Point center, int x, int y, int clear) {
 void plot8points(Point center, int x, int y, int clear) {
         plot4points(center, x, y, clear);
         plot4points(center, y, x, clear);
+}
+
+// draw circle section
+void drawhCircle(Point center, int radius, int clear) {
+    int x = 0;
+    int y = radius;
+    int p = 1 - radius;
+    /* plot first set of point */
+    plot8pointsh(center, x, y, clear);
+
+    while (x < y) {
+        x++;
+        if (p < 0) {
+            p += 2 * x + 1;
+        } else {
+            y--;
+            p += 2 * (x - y) + 1;
+        }
+        plot8pointsh(center, x, y, clear);
+    }
+}
+
+void plot4pointsh(Point center, int x, int y, int clear) {
+	int _x = center.x-x;
+	if (center.y-y >= 480) {
+		printf("%d\n",center.y-y);
+	}
+	while (_x < (center.x+x)) {
+		plotPixelRGBA(_x, center.y - y, 0, 255, 0, 1);
+		_x+=1;
+	}
+}
+
+void plot8pointsh(Point center, int x, int y, int clear) {
+        plot4pointsh(center, x, y, clear);
+        plot4pointsh(center, y, x, clear);
 }
 
 void drawPlane (Point start, int clear){
@@ -424,7 +632,7 @@ void drawPlane (Point start, int clear){
 }
 
 
-void drawExplosion(Point center, int scale) {
+void drawExplosion(Point center, int scale, int clear) {
     Point p1, p2, p3, p4, p5, p6, p7, p8, p9, p10, p11, p12, p13, p14, p15, p16;
     p1.x = center.x - (1*scale);        p1.y = center.y + (2*scale);
     p2.x = center.x;                    p2.y = center.y + (3*scale);
@@ -443,20 +651,20 @@ void drawExplosion(Point center, int scale) {
     p15.x = center.x - (2*scale);       p15.y = center.y + (1*scale);
     p16.x = center.x - (3*scale);       p16.y = center.y + (3*scale);
     
-    drawLine(p1,p2,0);
-    drawLine(p2,p3,0);
-    drawLine(p3,p4,0);
-    drawLine(p4,p5,0);
-    drawLine(p5,p6,0);
-    drawLine(p6,p7,0);
-    drawLine(p7,p8,0);
-    drawLine(p8,p9,0);
-    drawLine(p9,p10,0);
-    drawLine(p10,p11,0);
-    drawLine(p11,p12,0);
-    drawLine(p12,p13,0);
-    drawLine(p13,p14,0);
-    drawLine(p14,p15,0);
-    drawLine(p15,p16,0);
-    drawLine(p16,p1,0);
+    drawLine(p1,p2,clear);
+    drawLine(p2,p3,clear);
+    drawLine(p3,p4,clear);
+    drawLine(p4,p5,clear);
+    drawLine(p5,p6,clear);
+    drawLine(p6,p7,clear);
+    drawLine(p7,p8,clear);
+    drawLine(p8,p9,clear);
+    drawLine(p9,p10,clear);
+    drawLine(p10,p11,clear);
+    drawLine(p11,p12,clear);
+    drawLine(p12,p13,clear);
+    drawLine(p13,p14,clear);
+    drawLine(p14,p15,clear);
+    drawLine(p15,p16,clear);
+    drawLine(p16,p1,clear);
 }

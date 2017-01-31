@@ -106,18 +106,33 @@ int main(){
     
     point.x = vinfo.xres/2;
     
+    Point boom = {vinfo.xres/2, vinfo.yres};
+    drawhCircle(boom, 45, 1);
     pthread_t p;
     pthread_create(&p, NULL, &commandcall, NULL);
     pthread_create(&p, NULL, &draw, NULL);
     while(1) {
         drawPlane(p1,0);
         p1.x += 1;
-        drawPlane(p1,1);
-        usleep(10000);
+        drawPlane(p1,4);
+        usleep(5000);
+        if (life <= 0) {
+			int l;
+			for (l = 0; l < 39; l++) {
+				int randx = rand() % 250;
+				int randy = rand() % 200+50;
+				int rands = rand() % 30;
+				Point np = {p1.x+randx, p1.y+randy};
+				drawExplosion(np, rands, 2);
+				usleep(50000);
+				drawExplosion(np, rands, 0);
+			}
+			drawPlane(p1,0);
+			break;
+		}
     }
     pthread_join(p, NULL);
     
     Point center = {400, 400};
-    drawExplosion(center, 100);
     
 }
